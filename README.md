@@ -1,30 +1,102 @@
-# Jira Release Notes GitHub Action
+# Jira Release Notes Action
 
-Creates a GitHub Release with formatted release notes. Each Jira issue is linked and labeled with its summary from Jira. Bugs and non-bug issues are listed in separate sections.
+[![GitHub Marketplace](https://img.shields.io/badge/Marketplace-Jira%20Release%20Notes-blue?logo=github)](https://github.com/marketplace/actions/jira-release-notes)
 
-## Setup
+Create a **GitHub Release** with formatted notes from **Jira** issues. Each issue is a clickable link with its summary. **Bugs** and **Tasks/Stories** are listed in separate sections.
 
-1. Push this repository to GitHub.
-2. Add repository secrets:
-   - `JIRA_EMAIL` — Atlassian account email used for API access
-   - `JIRA_API_TOKEN` — [API token](https://id.atlassian.com/manage-profile/security/api-tokens)
-3. Ensure the account can read issues in your Jira project.
+Each user supplies **their own** Jira credentials via repository secrets. Your tokens are never shared with the action maintainer.
 
-## Run a release
+---
 
-1. Open **Actions** → **Create Jira Release Notes** → **Run workflow**.
-2. Fill in the inputs:
+## Usage
 
-| Input | Description |
-|-------|-------------|
-| **version** | Git tag name, e.g. `2.1.0` |
-| **jira_tasks** | Issue keys, e.g. `PROJ-101, PROJ-102, PROJ-103` |
-| **jira_base_url** | Browse URL prefix, e.g. `https://your-org.atlassian.net/browse/` |
-| **pre_release** | `true` for a pre-release, `false` for a full release |
-| **release_log_url** | Optional wiki/Confluence link appended at the end |
-| **create_tag** | `true` to create and push the tag on the current commit |
+### 1. Add secrets to your repository
 
-The tag must already exist on GitHub unless **create_tag** is enabled.
+**Settings → Secrets and variables → Actions**
+
+| Secret | Description |
+|--------|-------------|
+| `JIRA_EMAIL` | Your Atlassian account email |
+| `JIRA_API_TOKEN` | [Atlassian API token](https://id.atlassian.com/manage-profile/security/api-tokens) |
+
+### 2. Add a workflow
+
+```yaml
+name: Release with Jira notes
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        required: true
+        type: string
+      jira_tasks:
+        required: true
+        type: string
+      jira_base_url:
+        required: true
+        type: string
+      pre_release:
+        required: false
+        type: boolean
+        default: false
+      release_log_url:
+        required: false
+        type: string
+      create_tag:
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: alfahadiqbal/jira-release-notes-action@v1
+        with:
+          version: ${{ inputs.version }}
+          jira_tasks: ${{ inputs.jira_tasks }}
+          jira_base_url: ${{ inputs.jira_base_url }}
+          pre_release: ${{ inputs.pre_release }}
+          release_log_url: ${{ inputs.release_log_url }}
+          create_tag: ${{ inputs.create_tag }}
+        env:
+          JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
+          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+```
+
+See [`examples/workflow.yml`](examples/workflow.yml) for a copy-ready file.
+
+### 3. Run the workflow
+
+**Actions → Release with Jira notes → Run workflow**
+
+---
+
+## Inputs
+
+| Input | Required | Default | Description |
+|-------|----------|---------|-------------|
+| `version` | Yes | — | Git tag / release version |
+| `jira_tasks` | Yes | — | Issue keys: `PROJ-101, PROJ-102` |
+| `jira_base_url` | Yes | — | e.g. `https://your-org.atlassian.net/browse/` |
+| `pre_release` | No | `false` | Mark release as pre-release |
+| `release_log_url` | No | `""` | Optional wiki link at the end |
+| `create_tag` | No | `false` | Create and push tag if missing |
+
+Pass Jira credentials via `env` (not `with`):
+
+- `JIRA_EMAIL`
+- `JIRA_API_TOKEN`
+
+---
 
 ## Example output
 
@@ -39,20 +111,29 @@ The tag must already exist on GitHub unless **create_tag** is enabled.
 
 ## 🐞 Bug Fixes
 
-* [PROJ-101](https://your-org.atlassian.net/browse/PROJ-101) - Fix login timeout on slow networks
-* [PROJ-102](https://your-org.atlassian.net/browse/PROJ-102) - Correct pagination on search results
+* [PROJ-101](https://your-org.atlassian.net/browse/PROJ-101) - Fix login timeout
 
 ---
 
 ## ✅ Tasks
 
-* [PROJ-103](https://your-org.atlassian.net/browse/PROJ-103) - Add CSV export for reports
+* [PROJ-103](https://your-org.atlassian.net/browse/PROJ-103) - Add CSV export
+```
 
 ---
 
-## 📖 Full Release Log
+## Publish to GitHub Marketplace (maintainers)
 
-👉 [https://your-org.atlassian.net/wiki/spaces/DOC/pages/123456/Release+Log](https://your-org.atlassian.net/wiki/spaces/DOC/pages/123456/Release+Log)
-```
+1. Push this repo to GitHub and set it to **public**
+2. Create a release with tag **`v1.0.0`** (semver, with `v` prefix)
+3. Open [GitHub Marketplace – Manage Actions](https://github.com/marketplace/actions/manage)
+4. Select **Draft a new release** for this action
+5. Add category (e.g. **Continuous integration**), description, and publish
 
-Issues with Jira type **Bug** appear under **Bug Fixes**. All other types (Task, Story, etc.) appear under **Tasks**.
+Pin consumers to a major version: `@v1` → `v1.0.0` tag.
+
+---
+
+## License
+
+[MIT](LICENSE)
