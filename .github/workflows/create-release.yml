@@ -1,0 +1,81 @@
+name: Create Jira Release Notes
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Git tag / release version (e.g. 2.1.0)"
+        required: true
+        type: string
+      jira_tasks:
+        description: "Jira issue keys, comma- or newline-separated (e.g. PROJ-101, PROJ-102)"
+        required: true
+        type: string
+      jira_base_url:
+        description: "Jira browse base URL for links"
+        required: true
+        type: string
+        default: "https://your-org.atlassian.net/browse/"
+      pre_release:
+        description: "Create as pre-release (draft candidate)"
+        required: false
+        type: boolean
+        default: false
+      release_log_url:
+        description: "Optional Confluence/wiki release log URL"
+        required: false
+        type: string
+      create_tag:
+        description: "Create the git tag on the current commit if it does not exist"
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Generate release notes from Jira
+        id: notes
+        env:
+          JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
+          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+          VERSION: ${{ inputs.version }}
+          JIRA_TASKS: ${{ inputs.jira_tasks }}
+          JIRA_BASE_URL: ${{ inputs.jira_base_url }}
+          RELEASE_LOG_URL: ${{ inputs.release_log_url }}
+        run: node scripts/generate-release-notes.mjs
+
+      - name: Create git tag
+        if: inputs.create_tag == true
+        run: |
+          if git rev-parse "refs/tags/${{ inputs.version }}" >/dev/null 2>&1; then
+            echo "Tag ${{ inputs.version }} already exists, skipping creation."
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git tag -a "${{ inputs.version }}" -m "Release ${{ inputs.version }}"
+            git push origin "${{ inputs.version }}"
+          fi
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.version }}
+          name: ${{ inputs.version }}
+          body_path: release-notes.md
+          prerelease: ${{ inputs.pre_release }}
+          generate_release_notes: false
