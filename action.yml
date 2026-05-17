@@ -1,4 +1,4 @@
-name: Jira Release Notes
+name: Jira Release Notes Generator
 description: Fetch Jira issue summaries and create a GitHub Release with formatted notes (bugs and tasks separated).
 author: alfahadiqbal
 

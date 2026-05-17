@@ -1,6 +1,6 @@
-# Jira Release Notes Action
+# Jira Release Notes Generator
 
-[![GitHub Marketplace](https://img.shields.io/badge/Marketplace-Jira%20Release%20Notes-blue?logo=github)](https://github.com/marketplace/actions/jira-release-notes)
+[![GitHub Marketplace](https://img.shields.io/badge/Marketplace-Jira%20Release%20Notes%20Generator-blue?logo=github)](https://github.com/marketplace/actions/jira-release-notes-generator)
 
 Create a **GitHub Release** with formatted notes from **Jira** issues. Each issue is a clickable link with its summary. **Bugs** and **Tasks/Stories** are listed in separate sections.
 
@@ -128,7 +128,10 @@ Pass Jira credentials via `env` (not `with`):
 2. Create a release with tag **`v1.0.0`** (semver, with `v` prefix)
 3. Open [GitHub Marketplace – Manage Actions](https://github.com/marketplace/actions/manage)
 4. Select **Draft a new release** for this action
-5. Add category (e.g. **Continuous integration**), description, and publish
+5. Use display name **Jira Release Notes Generator** (must match `action.yml` `name`; slug: `jira-release-notes-generator`)
+6. **Primary category:** Continuous integration
+7. **Secondary category:** Project management
+8. Add description and publish
 
 Pin consumers to a major version: `@v1` → `v1.0.0` tag.
 
